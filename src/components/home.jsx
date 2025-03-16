@@ -32,7 +32,7 @@ const Home = ({ items }) => {
   
   useEffect(() => {
     const handleMouseMove = (event) => {
-      if(event.clientY + window.scrollY < 4600){
+      if(event.clientY + window.scrollY < 4900){
         mouseY = event.clientY;
         setCloudPosition({
             x: event.clientX + window.pageXOffset, // Include horizontal scroll offset
@@ -235,7 +235,7 @@ const Home = ({ items }) => {
                     <div id="journey_1">
                         <h1 id="j_e">Education</h1>
                         <div id="edu_raw">
-                            <img src="/src/assets/date_icon.svg" id="date_icon"/>
+                            <img src="https://raw.githubusercontent.com/yonas1a/yonas_ayele/39eb8870814f79cc09742505322e7e65c867e298/src/assets/date_icon.svg?token=BGMPNUIGCXCVF5535LBXEBTH23TNQ" id="date_icon"/>
                             <div id="edu_text">
                                 <h2 id="date">2019 -- 2023</h2>
                                 <h2 id="edu_head">BSc in Information Technology</h2>
@@ -245,7 +245,7 @@ const Home = ({ items }) => {
                             </div>
                         </div>
                         <div id="edu_raw">
-                            <img src="/src/assets/date_icon.svg" id="date_icon"/>
+                            <img src="https://raw.githubusercontent.com/yonas1a/yonas_ayele/39eb8870814f79cc09742505322e7e65c867e298/src/assets/date_icon.svg?token=BGMPNUIGCXCVF5535LBXEBTH23TNQ" id="date_icon"/>
                             <div id="edu_text">
                                 <h2 id="date">2024</h2>
                                 <h2 id="edu_head">Digital Marketing Certificate</h2>
@@ -258,7 +258,7 @@ const Home = ({ items }) => {
                     <div id="journey_1">
                         <h1 id="j_e">Experiance</h1>
                         <div id="edu_raw">
-                            <img src="/src/assets/date_icon.svg" id="date_icon"/>
+                            <img src="https://raw.githubusercontent.com/yonas1a/yonas_ayele/39eb8870814f79cc09742505322e7e65c867e298/src/assets/date_icon.svg?token=BGMPNUIGCXCVF5535LBXEBTH23TNQ" id="date_icon"/>
                             <div id="edu_text">
                                 <h2 id="date">2019 -- 2023</h2>
                                 <h2 id="edu_head">Wizdan Online Shopping</h2>
@@ -266,7 +266,7 @@ const Home = ({ items }) => {
                             </div>
                         </div>
                         <div id="edu_raw">
-                            <img src="/src/assets/date_icon.svg" id="date_icon"/>
+                            <img src="https://raw.githubusercontent.com/yonas1a/yonas_ayele/39eb8870814f79cc09742505322e7e65c867e298/src/assets/date_icon.svg?token=BGMPNUIGCXCVF5535LBXEBTH23TNQ" id="date_icon"/>
                             <div id="edu_text">
                                 <h2 id="date">09/2023 -- 03/2024</h2>
                                 <h2 id="edu_head">Meri Technology </h2>
@@ -275,7 +275,7 @@ const Home = ({ items }) => {
                             </div>
                         </div>
                         <div id="edu_raw">
-                            <img src="/src/assets/date_icon.svg" id="date_icon"/>
+                            <img src="https://raw.githubusercontent.com/yonas1a/yonas_ayele/39eb8870814f79cc09742505322e7e65c867e298/src/assets/date_icon.svg?token=BGMPNUIGCXCVF5535LBXEBTH23TNQ" id="date_icon"/>
                             <div id="edu_text">
                                 <h2 id="date">2024</h2>
                                 <h2 id="edu_head">Droga Pharma</h2>
@@ -284,7 +284,7 @@ const Home = ({ items }) => {
                             </div>
                         </div>
                         <div id="edu_raw">
-                            <img src="/src/assets/date_icon.svg" id="date_icon"/>
+                            <img src="https://raw.githubusercontent.com/yonas1a/yonas_ayele/39eb8870814f79cc09742505322e7e65c867e298/src/assets/date_icon.svg?token=BGMPNUIGCXCVF5535LBXEBTH23TNQ" id="date_icon"/>
                             <div id="edu_text">
                                 <h2 id="date">2024</h2>
                                 <h2 id="edu_head">Droga Consulting</h2>
