@@ -32,7 +32,7 @@ const Home = ({ items }) => {
   
   useEffect(() => {
     const handleMouseMove = (event) => {
-      if(event.clientY + window.scrollY < 4900){
+      if(event.clientY + window.scrollY < 4600){
         mouseY = event.clientY;
         setCloudPosition({
             x: event.clientX + window.pageXOffset, // Include horizontal scroll offset
