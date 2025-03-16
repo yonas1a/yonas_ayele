@@ -178,7 +178,7 @@ const Home = ({ items }) => {
         <div className="contanier_div">
           <div className="first_div">
             <div className="logo">
-              <img id="logo" src="/src/assets/logo.png" alt="Logo" />
+              <img id="logo" src="https://mir-s3-cdn-cf.behance.net/project_modules/fs/337cf1221557341.67d6dcc95bddd.png" alt="Logo" />
             </div>
             <div className="menu">
               <h2 id="link" onClick={() => handleScroll(0)}>About Me</h2>
@@ -221,8 +221,8 @@ const Home = ({ items }) => {
                 <div id="main_view">   
                     <div id="mv">
                         <div id="cpu">
-                            <img src="/src/assets/cpu.png" id="cpu_img"/>
-                            <img src="/src/assets/cpu_shadow.png" id="cpu_shdow"/>
+                            <img src="https://mir-s3-cdn-cf.behance.net/project_modules/fs/6310ee221557341.67d6dcc95c8ad.png" id="cpu_img"/>
+                            <img src="https://mir-s3-cdn-cf.behance.net/project_modules/fs/790699221557341.67d6dcc95c364.png" id="cpu_shdow"/>
                         </div>
                     </div>
                     <div id="mv">
