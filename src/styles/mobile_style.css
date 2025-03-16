@@ -1,0 +1,50 @@
+.cursor-follower {
+    position: absolute;
+    width: 450px;
+    height: 450px;
+    border-radius: 50%;
+    background: green;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+  }
+  
+  .Continer {
+    height: 100vh;
+    overflow: hidden;
+    background-image: url(/src/assets/shape.png);
+    background-repeat: repeat;
+    background-size: 50px;
+    background-position: center;
+    z-index: 2;
+    position: relative;
+  }
+  
+  .App {
+    height: 100vh;
+    width: 100%;
+    background: #0f0f34;
+  }
+  
+  div#root {
+    width: 100%;
+  }
+  
+  
+  /* fisrt div  ---------------------------------------  */
+  
+  .first_div {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+  img#logo {
+    width: 150px;
+    margin-left: 25px;
+    margin-bottom: -35px;
+  }
+  
+  .text {
+    color: green;
+  }
