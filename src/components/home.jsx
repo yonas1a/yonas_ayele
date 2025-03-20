@@ -164,6 +164,19 @@ const Home = ({ items }) => {
 
 
 
+
+
+
+//   window hight detetcter for the portfolio viewer
+const [s_height, setS_Height] = useState(window.innerHeight);
+useEffect(() => {
+    const resize = () => setS_Height(window.innerHeight);
+    window.addEventListener("resize", resize);
+    return () => window.removeEventListener("resize", resize);
+  }, []);
+
+
+
   return (
     <div className="background">
       <div
@@ -380,6 +393,7 @@ const Home = ({ items }) => {
                         className="popup_div"
                         onClick={() => setprojectname("none")}
                         style={{
+                            height: s_height,
                             opacity: projectname!= "none" ? 1 : 0, // Controls visibility smoothly
                             visibility: projectname!= "none" ? "visible" : "hidden", // Prevents interaction when hidden
                             transition: "opacity 1s ease-in-out, visibility 1s ease-in-out",

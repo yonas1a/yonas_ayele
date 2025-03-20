@@ -816,7 +816,6 @@ p.hover_p {
   width: 100%;
   background: #000000d6;
   overflow: scroll;
-  height: 750px;
   display: flex;
   justify-content: center;
   padding-top: 25px;
