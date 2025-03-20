@@ -543,7 +543,7 @@ button {
   width: 300%;
 }
 .port_con {
-  width: 75%;
+  max-width: 1110px;
   overflow: hidden;
 }
 .port_div {
@@ -1666,6 +1666,7 @@ p#con-txt {
   overflow: hidden;
   padding-left: 22px;
 }
+
 button.cloth_popup {
   height: 40px;
   font-size: 25px;
