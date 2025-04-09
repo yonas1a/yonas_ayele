@@ -32,7 +32,7 @@ const Home = ({ items }) => {
   
   useEffect(() => {
     const handleMouseMove = (event) => {
-      if(event.clientY + window.scrollY < 4900){
+      if(event.clientY + window.scrollY < 5000){
         mouseY = event.clientY;
         setCloudPosition({
             x: event.clientX + window.pageXOffset, // Include horizontal scroll offset
@@ -47,7 +47,7 @@ const Home = ({ items }) => {
     };
     const handleScroll = () => {
       console.log(window.scrollY);
-      if(window.scrollY < 4100){
+      if(window.scrollY < 4300){
         setCloudPosition({
             y: mouseY + window.scrollY, // Include vertical scroll offset
         });
@@ -463,7 +463,7 @@ useEffect(() => {
                             <div className="port_div2 port_div">
                                 {projects.map((project, index) => (
                                     project.type === "ui/ux_and_Web" && (
-                                        <div className="hold_img"  onClick={() => setprojectname(project.title)}>
+                                        <div className="hold_img"  onClick={() => window.location.href = project.web_link}>
                                         <div className="hover_text">
                                         <h1 className="hover_h1">{project.title}</h1>
                                         <a className="hover_p" href={project.web_link}>Visit</a>
