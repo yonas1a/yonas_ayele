@@ -237,7 +237,7 @@ useEffect(() => {
                     </div>
                     <div id="mv">
                         <h1 id="my_name">Yonas Ayele</h1>
-                        <h3 id="skill_text">Developer/Designer</h3>
+                        <h3 id="skill_text">Developer/Designer/Digital Marketer</h3>
                         <p id="par">I'm a dedicated web developer and graphic designer with a talent for blending creativity with technical expertise. My mission is to transform ideas into visually stunning and highly functional digital experiences.</p>
                     </div>
                 </div>
