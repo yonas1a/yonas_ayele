@@ -1577,16 +1577,45 @@ div#percentage_bar {
 
   /* Footer */
   .footer {
-    padding: 40px 20px;
+    padding: 36px 22px 24px;
   }
   .footer-brand {
     font-size: 22px;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
   }
   .footer-sections {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px 20px;
     width: 100%;
-    flex-direction: column;
-    gap: 24px;
+  }
+  .footer-sections > div:first-child {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .footer_pages {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .footer-sections > div:last-child {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .footer_pages .footer-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 16px;
+  }
+  .footer-list li {
+    margin-bottom: 10px;
+  }
+  .footer-link {
+    display: inline-block;
+    padding: 3px 0;
+  }
+  .footer-note {
+    margin-top: 30px;
+    line-height: 1.6;
   }
 
   /* Lightbox */
