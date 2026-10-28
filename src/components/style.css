@@ -151,7 +151,7 @@ img#logo {
    HERO SECTION
    ═══════════════════════════════════════════════════════════ */
 .second_div {
-  margin-bottom: 150px;
+  margin-bottom: 40px;
 }
 .fourth_div {
   padding-top: 80px;
@@ -218,6 +218,103 @@ h3#skill_text {
   border-radius: 10px;
   border: 1px solid rgba(0, 126, 255, 0.2);
   line-height: 1.6;
+}
+.download-cv {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 24px;
+  padding: 12px 20px;
+  border: 1px solid rgba(0, 126, 255, 0.55);
+  border-radius: 8px;
+  background: #007eff;
+  color: #fff;
+  font-family: var(--font-primary, 'Inter', system-ui);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.download-cv:hover {
+  background: #168bff;
+  color: #fff;
+  transform: translateY(-2px);
+}
+.download-cv svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TECHNOLOGY MARQUEE
+   ═══════════════════════════════════════════════════════════ */
+.tech-marquee {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    margin: 116px 0 0;
+    padding: 12px 0;
+    overflow: hidden;
+}
+.tech-marquee-window {
+  width: 100%;
+  overflow: hidden;
+}
+.tech-marquee-track,
+.tech-marquee-group {
+  display: flex;
+  width: max-content;
+  align-items: center;
+}
+.tech-marquee-track {
+  will-change: transform;
+}
+.tech-marquee-group {
+  flex-shrink: 0;
+  gap: 14px;
+  padding: 0 7px;
+}
+.tech-marquee-track.moves-right {
+  animation: tech-marquee-right 36s linear infinite;
+}
+.tech-marquee-track.moves-left {
+  animation: tech-marquee-left 36s linear infinite;
+}
+.tech-marquee-item {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 18px;
+  border: 1px solid rgba(0, 126, 255, 0.2);
+  border-radius: 24px;
+  background: rgba(0, 126, 255, 0.06);
+  color: rgba(255, 255, 255, 0.78);
+  font-family: var(--font-primary, 'Inter', system-ui);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tech-marquee-item svg {
+  width: 18px;
+  height: 18px;
+  color: #4da6ff;
+  flex-shrink: 0;
+}
+@keyframes tech-marquee-right {
+  from { transform: translateX(-33.3333%); }
+  to { transform: translateX(0); }
+}
+@keyframes tech-marquee-left {
+  from { transform: translateX(0); }
+  to { transform: translateX(-33.3333%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tech-marquee-track {
+    animation: none !important;
+  }
 }
 
 /* CPU Animation */

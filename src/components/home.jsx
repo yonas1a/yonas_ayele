@@ -2,8 +2,29 @@ import { useEffect, useState, useRef } from "react";
 import "../components/style.css";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { MdOutlineClose } from "react-icons/md";
-import { LuPhone, LuExternalLink, LuCalendar, LuMapPin } from "react-icons/lu";
+import { LuPhone, LuExternalLink, LuCalendar, LuMapPin, LuDownload } from "react-icons/lu";
 import { MdOutlineEmail } from "react-icons/md";
+import {
+  SiExpo,
+  SiFastapi,
+  SiFlask,
+  SiFlutter,
+  SiGit,
+  SiGithubactions,
+  SiGo,
+  SiLinux,
+  SiN8N,
+  SiNginx,
+  SiNextdotjs,
+  SiNodedotjs,
+  SiPostgresql,
+  SiPython,
+  SiReact,
+  SiSqlite,
+  SiTailwindcss,
+  SiTypescript,
+  SiVercel,
+} from "react-icons/si";
 import cpuImage from "../assets/cpu.png";
 import cpuShadowImage from "../assets/cpu_shadow.png";
 import devProjects from "../components/devProjects";
@@ -63,6 +84,32 @@ const portfolioVariants = {
   center: { opacity: 1, x: 0 },
   exit: (direction) => ({ opacity: 0, x: `${direction * -100}%` }),
 };
+
+const techMarqueeRows = [
+  [
+    { name: "Go", Icon: SiGo },
+    { name: "PostgreSQL", Icon: SiPostgresql },
+    { name: "SQLite", Icon: SiSqlite },
+    { name: "Node.js", Icon: SiNodedotjs },
+    { name: "Flask", Icon: SiFlask },
+    { name: "Python", Icon: SiPython },
+    { name: "FastAPI", Icon: SiFastapi },
+    { name: "React", Icon: SiReact },
+    { name: "n8n", Icon: SiN8N },
+  ],
+  [
+    { name: "Next.js", Icon: SiNextdotjs },
+    { name: "TypeScript", Icon: SiTypescript },
+    { name: "Flutter", Icon: SiFlutter },
+    { name: "Tailwind CSS", Icon: SiTailwindcss },
+    { name: "Expo", Icon: SiExpo },
+    { name: "nginx", Icon: SiNginx },
+    { name: "GitHub Actions", Icon: SiGithubactions },
+    { name: "Linux", Icon: SiLinux },
+    { name: "Git", Icon: SiGit },
+    { name: "Vercel", Icon: SiVercel },
+  ],
+];
 
 /* ─────────────────  Animated Project Row  ───────────────── */
 const ProjectRow = ({ project, index }) => {
@@ -330,8 +377,33 @@ const Home = () => {
                   {content.heroTagline}
                 </motion.p>
                 <p id="par">{content.heroBio}</p>
+                <a className="download-cv" href="/cv.pdf" download="Yonas-Ayele-CV.pdf">
+                  <LuDownload aria-hidden="true" />
+                  <span>Download CV</span>
+                </a>
               </div>
             </div>
+          </section>
+
+          <section className="tech-marquee" aria-label="Technologies">
+            {techMarqueeRows.map((row, rowIndex) => (
+              <div className="tech-marquee-window" key={rowIndex}>
+                <div
+                  className={`tech-marquee-track ${rowIndex === 0 ? "moves-right" : "moves-left"}`}
+                >
+                  {[0, 1, 2].map((copy) => (
+                    <div className="tech-marquee-group" key={copy} aria-hidden={copy === 1}>
+                      {row.map(({ name, Icon }) => (
+                        <span className="tech-marquee-item" key={name}>
+                          <Icon aria-hidden="true" />
+                          <span>{name}</span>
+                        </span>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </section>
 
           {/* ═══════════════════  SKILLS  ═══════════════════ */}
