@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Interactive portrait</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Theme tokens (light + dark) ---------- */
+  :root{--bg:#eef1f5;--ink:#14202f;--mute:#5c6b7d;--accent:#2f6db5;--ring:rgba(20,32,47,.14);--shadow:0 40px 80px -36px rgba(20,32,47,.45)}
+  @media (prefers-color-scheme:dark){:root{--bg:#0d1520;--ink:#e8edf3;--mute:#8d9bad;--accent:#7fb2ea;--ring:rgba(255,255,255,.16);--shadow:0 40px 90px -30px rgba(0,0,0,.85)}}
+  *{box-sizing:border-box;margin:0}
+  body{min-height:100svh;display:flex;flex-direction:column;background:var(--bg);color:var(--ink);
+       font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;
+       padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);overflow-x:hidden}
+  header{display:flex;justify-content:space-between;align-items:center;padding:22px clamp(18px,4vw,40px)}
+  .brand{font-weight:600;letter-spacing:-.01em}
+  .mood{display:inline-flex;align-items:center;gap:8px;font-size:.88rem;color:var(--mute)}
+  .mood i{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+  main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(24px,5vh,44px);padding:0 20px 40px}
+
+  /* ---------- Circular portrait container ---------- */
+  .portrait{position:relative;width:min(84vw,56svh,520px);aspect-ratio:1;border-radius:50%;overflow:hidden;background:#bcd5ee;
+            box-shadow:var(--shadow),0 0 0 1px var(--ring),0 0 0 12px var(--bg),0 0 0 13px var(--ring);
+            cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+  .portrait.grabbing{cursor:grabbing}
+  canvas{display:block;width:100%;height:100%;touch-action:none;opacity:0;transition:opacity .6s ease}
+  .portrait.ready canvas{opacity:1}
+  .interaction-cue{position:absolute;z-index:2;top:72%;left:72%;width:36px;height:36px;border:2px solid rgba(255,255,255,.9);
+    border-radius:50%;background:rgba(0,126,255,.22);box-shadow:0 0 0 5px rgba(0,126,255,.16),0 0 20px rgba(77,166,255,.8);
+    opacity:0;pointer-events:none;transform:translate(-50%,-50%) scale(.7)}
+  .interaction-cue::after{position:absolute;top:50%;left:50%;width:8px;height:8px;border-radius:50%;background:#fff;
+    content:"";transform:translate(-50%,-50%)}
+  .portrait.cue-active .interaction-cue{animation:cue-pull 2.6s cubic-bezier(.22,.7,.25,1) both}
+  @keyframes cue-pull{
+    0%,8%{top:72%;left:72%;opacity:0;transform:translate(-50%,-50%) scale(.7)}
+    15%{opacity:.9;transform:translate(-50%,-50%) scale(1)}
+    40%{top:55%;left:55%;opacity:1;transform:translate(-50%,-50%) scale(1)}
+    46%{transform:translate(-50%,-50%) scale(.8)}
+    63%{top:62%;left:62%;opacity:1;transform:translate(-50%,-50%) scale(1.08)}
+    74%{top:55%;left:55%;opacity:.9;transform:translate(-50%,-50%) scale(1)}
+    88%{top:72%;left:72%;opacity:.6;transform:translate(-50%,-50%) scale(.9)}
+    100%{top:72%;left:72%;opacity:0;transform:translate(-50%,-50%) scale(.7)}
+  }
+
+  .copy{text-align:center;max-width:36ch}
+  h1{font-size:clamp(1.6rem,4.6vw,2.4rem);font-weight:600;letter-spacing:-.025em;line-height:1.1}
+  .copy p{margin-top:12px;color:var(--mute);line-height:1.5}
+  html.embedded,html.embedded body{width:100%;height:100%;min-height:0;background:transparent}
+  html.embedded body{overflow:hidden;padding:0}
+  html.embedded header,html.embedded .copy{display:none}
+  html.embedded main{height:100%;min-height:0;justify-content:center;gap:0;padding:0}
+  html.embedded .portrait{width:min(84vw,84vh,520px);box-shadow:0 24px 60px -28px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.16)}
+</style>
+<script>
+  if (new URLSearchParams(location.search).has('embedded')) {
+    document.documentElement.classList.add('embedded');
+  }
+</script>
+</head>
+<body>
+<header>
+  <!-- EDIT: put your name / links here -->
+  <span class="brand">Your Name</span>
+  <span class="mood" aria-live="polite"><i></i><span id="mood">Calm</span></span>
+</header>
+
+<main>
+  <div class="portrait" id="portrait">
+    <canvas id="cv" role="img" aria-label="Animated portrait. Move to be watched, click to startle, drag to stretch."></canvas>
+    <div class="interaction-cue" id="interactionCue" aria-hidden="true"></div>
+  </div>
+  <div class="copy">
+    <h1>Go ahead, give me a tug.</h1>
+    <p>Move around and I'll follow you. Click to startle me, or drag to stretch me. I bounce back.</p>
+  </div>
+</main>
+
+<script>
+/* =====================================================================
+   INTERACTIVE PORTRAIT
+   WebGL 2D mesh deformation. No external libraries.
+   Sections: 1 config  2 WebGL setup  3 mesh + springs  4 behaviour
+             5 input  6 render loop
+   ===================================================================== */
+window.startPortrait = async function (images) {
+  'use strict';
+
+  /* ---------- 1. CONFIG ---------- */
+  const IMG_W = 912, IMG_H = 1163;              // source photo size
+  const VIEW  = { x: 46, y: 10, s: 820 };       // square region of the photo shown in the circle
+  const COLS = 36, ROWS = 46;                   // mesh resolution
+  const PHYS = { k: 170, c: 10, kn: 60 };       // spring stiffness, damping, neighbour coupling
+  const DRAG = { sigma: 130, max: 260, thresh: 5 }; // grab falloff (px), max stretch (px), drag threshold (css px)
+  const NEAR = 1.7;                             // he follows the cursor only within this many circle-radii of the centre (1 = the edge)
+  // ms: track = how long he keeps looking at a click spot, linger = delay before he looks away after the cursor leaves the zone,
+  // then while idle he repeats: look around (awake) -> short nap
+  const TIME = { track: 4000, linger: 600, awake: 9000, nap: 1500 };
+  const EYES = { x: 462, y: 292 };              // eye midpoint in photo px (gaze reference)
+  const PIVOT = { x: 462, y: 600 };             // neck: head sways around this point
+  const FADE = { wow: 70, stressed: 110, dizzy: 100, happy: 220, normal: 200, closed: 45 }; // crossfade ms
+  const LABEL = { wow: 'Surprised', stressed: 'Stressed', dizzy: 'Dizzy', happy: 'Happy', normal: 'Calm' };
+  const SEQ = {                                  // timed expression chains
+    wow:     [['wow', 1100], ['normal', 450]],
+    release: [['dizzy', 1700], ['happy', 1800], ['normal', 600]]
+  };
+  const LIFE = {                                 // idle sway (rad, Hz) and breathing (px, Hz) per mood
+    awake: { amp: .010, f: .35, br: 2.5, bf: .28 },
+    sleep: { amp: .004, f: .15, br: 4.0, bf: .16 },
+    dizzy: { amp: .050, f: .85, br: 2.5, bf: .28 }
+  };
+  const motion = matchMedia('(prefers-reduced-motion: reduce)').matches ? .3 : 1;
+
+  const cv = document.getElementById('cv'), portrait = document.getElementById('portrait'),
+        moodEl = document.getElementById('mood');
+  const interactionCue = document.getElementById('interactionCue');
+  const embedded = new URLSearchParams(location.search).has('embedded');
+  const CUE_DURATION = 2600;
+  let pendingCueStart = false;
+  let cueMessageHandler = null;
+  if (embedded) {
+    window.addEventListener('message', event => {
+      if (event.source !== window.parent || event.origin !== location.origin) return;
+      const type = event.data?.type;
+      if (type !== 'portrait-cue-start' && type !== 'portrait-cue-cancel') return;
+      if (cueMessageHandler) cueMessageHandler(type);
+      else pendingCueStart = type === 'portrait-cue-start';
+    });
+    window.addEventListener('pointermove', () => {
+      window.parent.postMessage({ type: 'portrait-cue-activity' }, location.origin);
+    }, { passive: true });
+  }
+  const gl = cv.getContext('webgl', { antialias: true, alpha: false });
+  if (!gl) { portrait.style.background = `url(${images.normal}) 50% 12%/cover`; return; } // static fallback
+
+  /* ---------- 2. WEBGL SETUP ---------- */
+  const VS = `attribute vec2 p;attribute vec2 t;uniform vec3 v;varying vec2 uv;
+    void main(){uv=t;vec2 q=(p-v.xy)/v.z;gl_Position=vec4(q.x*2.-1.,1.-q.y*2.,0.,1.);}`;
+  const FS = `precision mediump float;uniform sampler2D a,b;uniform float m;varying vec2 uv;
+    void main(){gl_FragColor=mix(texture2D(a,uv),texture2D(b,uv),m);}`;
+  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+  const prog = gl.createProgram();
+  gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS));
+  gl.linkProgram(prog); gl.useProgram(prog);
+  const U = n => gl.getUniformLocation(prog, n);
+
+  // Load every expression photo as a texture
+  const tex = {};
+  await Promise.all(Object.keys(images).map(k => new Promise(res => {
+    const im = new Image();
+    im.onload = () => {
+      const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, im);
+      for (const [p, val] of [[gl.TEXTURE_MIN_FILTER, gl.LINEAR], [gl.TEXTURE_MAG_FILTER, gl.LINEAR],
+                              [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]])
+        gl.texParameteri(gl.TEXTURE_2D, p, val);
+      tex[k] = t; res();
+    };
+    im.onerror = res; im.src = images[k];
+  })));
+
+  /* ---------- 3. MESH + SPRING PHYSICS ---------- */
+  const NX = COLS + 1, NY = ROWS + 1, N = NX * NY;
+  const rest = new Float32Array(N * 2), uvs = new Float32Array(N * 2), pos = new Float32Array(N * 2);
+  const u = new Float32Array(N * 2), vel = new Float32Array(N * 2);          // per-vertex displacement + velocity
+  const pin = new Float32Array(N), gw = new Float32Array(N);                  // edge pinning, grab weights
+  const headM = new Float32Array(N), bodyM = new Float32Array(N);             // idle-motion masks
+  const sm = (a, b, x) => { x = Math.min(1, Math.max(0, (x - a) / (b - a))); return x * x * (3 - 2 * x); };
+  for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) {
+    const n = j * NX + i, x = i / COLS * IMG_W, y = j / ROWS * IMG_H;
+    rest[2*n] = x; rest[2*n+1] = y; uvs[2*n] = i / COLS; uvs[2*n+1] = j / ROWS;
+    pin[n] = sm(0, 70, Math.min(x, IMG_W - x, y, IMG_H - y));  // photo borders never move, so no holes appear
+    headM[n] = 1 - sm(520, 700, y);                            // head sways, shoulders stay
+    bodyM[n] = .35 + .65 * sm(450, 760, y);                    // shoulders breathe more than the head
+  }
+  const idx = new Uint16Array(COLS * ROWS * 6);
+  for (let j = 0, q = 0; j < ROWS; j++) for (let i = 0; i < COLS; i++) {
+    const a = j * NX + i, b = a + 1, c = a + NX, d = c + 1;
+    idx.set([a, b, c, b, d, c], q); q += 6;
+  }
+  const buf = (data, target, usage) => { const b = gl.createBuffer(); gl.bindBuffer(target, b); gl.bufferData(target, data, usage); return b; };
+  const posBuf = buf(pos, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW);
+  const attr = (name, b) => { const l = gl.getAttribLocation(prog, name); gl.bindBuffer(gl.ARRAY_BUFFER, b);
+                              gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l, 2, gl.FLOAT, false, 0, 0); };
+  attr('p', posBuf); attr('t', buf(uvs, gl.ARRAY_BUFFER, gl.STATIC_DRAW));
+  buf(idx, gl.ELEMENT_ARRAY_BUFFER, gl.STATIC_DRAW);
+  gl.uniform3f(U('v'), VIEW.x, VIEW.y, VIEW.s); gl.uniform1i(U('a'), 0); gl.uniform1i(U('b'), 1);
+
+  const pull = { x: 0, y: 0 };                   // current (rubber-banded) drag vector in photo px
+  function physics(dt) {
+    for (let s = 0; s < 2; s++) {                // 2 sub-steps for stability
+      const h = dt / 2;
+      for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) {
+        const n = j * NX + i;
+        for (let a = 0; a < 2; a++) {
+          const k = 2 * n + a, cur = u[k];
+          const nb = (u[2*(i > 0 ? n-1 : n)+a] + u[2*(i < COLS ? n+1 : n)+a] +
+                      u[2*(j > 0 ? n-NX : n)+a] + u[2*(j < ROWS ? n+NX : n)+a]) / 4;
+          const tgt = (a ? pull.y : pull.x) * gw[n];
+          vel[k] += (PHYS.k * (tgt - cur) - PHYS.c * vel[k] + PHYS.kn * (nb - cur)) * h;
+        }
+      }
+      for (let k = 0; k < N * 2; k++) u[k] += vel[k] * h;
+    }
+  }
+
+  /* ---------- 4. BEHAVIOUR (which photo to show) ---------- */
+  const now0 = performance.now();
+  const S = { lastInput: now0, near: false, trackUntil: 0, ptr: { x: 0, y: 0 }, seq: null, seqI: 0, seqT: 0,
+              idle: { e: 'normal', next: now0 + 1200 }, blinkUntil: 0, nextBlink: now0 + 2500,
+              gaze: 'normal', cand: 'normal', since: 0 };
+  const drag = { active: false, moved: false, cue: false, sx: 0, sy: 0, cx: 0, cy: 0 };
+  let cueStartedAt = 0;
+  let cueDisabled = false;
+  const play = (name, t) => { S.seq = SEQ[name]; S.seqI = 0; S.seqT = t; };
+
+  // Choose a gaze photo from the cursor position relative to the eyes
+  function gazeAt(t) {
+    const r = cv.getBoundingClientRect();
+    const ex = r.left + (EYES.x - VIEW.x) / VIEW.s * r.width, ey = r.top + (EYES.y - VIEW.y) / VIEW.s * r.height;
+    const dx = (S.ptr.x - ex) / r.width, dy = (S.ptr.y - ey) / r.height;
+    const side = dx < -.13 ? 'left' : dx > .13 ? 'right' : '';
+    let c = 'normal';
+    if (side) c = side + (dy > .16 ? 'Down' : '');
+    else if (dy > .28) c = (dx < 0 ? 'left' : 'right') + 'Down';
+    if (c !== S.cand) { S.cand = c; S.since = t; }  // small debounce avoids flicker on the borders
+    if (t - S.since > 90) S.gaze = c;
+    return S.gaze;
+  }
+
+  // Returns [expression, crossfade ms, mood label or null]
+  function decide(t) {
+    if (drag.active && drag.moved) return ['stressed', FADE.stressed, LABEL.stressed];
+    if (S.seq) {
+      if (t - S.seqT > S.seq[S.seqI][1]) { S.seqI++; S.seqT = t; if (S.seqI >= S.seq.length) S.seq = null; }
+      if (S.seq) { const e = S.seq[S.seqI][0]; return [e, FADE[e], LABEL[e]]; }
+    }
+    if (S.near) S.lastInput = t;                 // cursor hovering near him counts as attention, so no napping
+    const idleFor = t - S.lastInput;
+    // Nothing happening: a repeating cycle of "awake for a while" then "nap for a moment".
+    // Any input resets idleFor, which restarts the cycle awake.
+    if (idleFor % (TIME.awake + TIME.nap) > TIME.awake) return ['closed', 300, 'Napping'];
+    if (t >= S.nextBlink) {                                                      // random blinks (sometimes double)
+      S.blinkUntil = t + 120; S.nextBlink = t + (Math.random() < .2 ? 300 : 2200 + Math.random() * 3200);
+    }
+    if (t < S.blinkUntil) return ['closed', FADE.closed, null];
+    if (S.near || t < S.trackUntil) return [gazeAt(t), 120, 'Watching you']; // eyes follow the cursor
+    if (t >= S.idle.next) {                                                      // idle: look around, return to centre
+      if (S.idle.e !== 'normal') S.idle = { e: 'normal', next: t + 1400 + Math.random() * 1400 };
+      else S.idle = { e: ['left', 'right', 'leftDown', 'rightDown'][Math.random() * 4 | 0], next: t + 900 + Math.random() * 1100 };
+    }
+    return [S.idle.e, 150, 'Looking around'];
+  }
+
+  // Two-layer crossfade between photos
+  let A = 'normal', B = 'normal', mix = 1, fade = 100;
+  function show(e, ms) {
+    if (e === B) return;
+    if (mix > .5) A = B;           // if interrupted mid-fade, keep whichever layer is dominant
+    B = e; mix = 0; fade = ms;
+  }
+  let mood = '';
+  const setMood = l => { if (l && l !== mood) { mood = l; moodEl.textContent = l; } };
+
+  /* ---------- 5. INPUT ---------- */
+  const toPhoto = e => { const r = cv.getBoundingClientRect();
+    return [VIEW.x + (e.clientX - r.left) / r.width * VIEW.s, VIEW.y + (e.clientY - r.top) / r.height * VIEW.s]; };
+  const setGrabWeights = (x, y) => {
+    const [gx, gy] = toPhoto({ clientX: x, clientY: y });
+    for (let n = 0; n < N; n++) {
+      const dx = rest[2*n] - gx, dy = rest[2*n+1] - gy;
+      gw[n] = Math.exp(-(dx*dx + dy*dy) / (2 * DRAG.sigma * DRAG.sigma));
+    }
+    drag.gx = gx; drag.gy = gy;
+  };
+  const notifyParent = type => {
+    if (embedded && window.parent !== window) window.parent.postMessage({ type }, location.origin);
+  };
+  const finishCue = () => {
+    cueStartedAt = 0;
+    portrait.classList.remove('cue-active');
+    if (drag.active && drag.cue) release(false);
+  };
+  const startCue = () => {
+    if (!embedded || cueDisabled || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    finishCue();
+    cueStartedAt = performance.now();
+    S.lastInput = cueStartedAt;
+    interactionCue.style.animationDuration = CUE_DURATION + 'ms';
+    portrait.classList.remove('cue-active');
+    void portrait.offsetWidth;
+    portrait.classList.add('cue-active');
+  };
+  cueMessageHandler = type => {
+    if (type === 'portrait-cue-start') startCue();
+    else finishCue();
+  };
+  if (pendingCueStart) {
+    pendingCueStart = false;
+    startCue();
+  }
+  // Attention rules: he follows the cursor only while it is near the circle,
+  // and glances at any spot you click (anywhere on the page) for TIME.track ms.
+  const isNear = e => { const r = cv.getBoundingClientRect(), R = r.width / 2;
+    return Math.hypot(e.clientX - (r.left + R), e.clientY - (r.top + R)) < R * NEAR; };
+  const look = (e, t) => { S.ptr.x = e.clientX; S.ptr.y = e.clientY; S.lastInput = t; };
+  addEventListener('pointermove', e => {
+    const t = performance.now(), near = isNear(e);
+    if (near) look(e, t);
+    else if (S.near) S.trackUntil = Math.max(S.trackUntil, t + TIME.linger); // just left the zone: brief linger
+    S.near = near;                               // cursor far away: ignored entirely
+  });
+  addEventListener('pointerdown', e => {
+    const t = performance.now(); look(e, t); S.trackUntil = t + TIME.track; S.near = isNear(e);
+  });
+  // Touch has no hover: after the finger lifts, only the tap spot is remembered. Same when the mouse leaves the window.
+  ['pointerup', 'pointercancel'].forEach(ev => addEventListener(ev, e => { if (e.pointerType !== 'mouse') S.near = false; }));
+  document.documentElement.addEventListener('pointerleave', () => { S.near = false; });
+  addEventListener('keydown', () => { S.lastInput = performance.now(); });
+
+  cv.addEventListener('pointerdown', e => {
+    cueDisabled = true;
+    finishCue();
+    notifyParent('portrait-user-interaction');
+    cv.setPointerCapture(e.pointerId);
+    Object.assign(drag, { active: true, moved: false, sx: e.clientX, sy: e.clientY, cx: e.clientX, cy: e.clientY });
+    S.seq = null;
+    setGrabWeights(e.clientX, e.clientY);
+  });
+  cv.addEventListener('pointermove', e => {
+    if (!drag.active) return;
+    drag.cx = e.clientX; drag.cy = e.clientY;
+    if (!drag.moved && Math.hypot(drag.cx - drag.sx, drag.cy - drag.sy) > DRAG.thresh) {
+      drag.moved = true; portrait.classList.add('grabbing');
+    }
+  });
+  const release = (animate = true) => {
+    if (!drag.active) return;
+    const t = performance.now(); S.lastInput = t;
+    if (drag.moved && animate) play('release', t); // let go: dizzy, then happy, then normal
+    else {                                        // plain click: wow, then normal, plus a little poke
+      if (animate) {
+        play('wow', t);
+        for (let n = 0; n < N; n++) {
+          const dx = rest[2*n] - drag.gx, dy = rest[2*n+1] - drag.gy, d = Math.hypot(dx, dy) + 1e-3;
+          const w = Math.exp(-d * d / (2 * 90 * 90)) * 420 / d;
+          vel[2*n] += dx * w; vel[2*n+1] += dy * w;
+        }
+      }
+    }
+    drag.active = false; drag.moved = false; drag.cue = false; portrait.classList.remove('grabbing');
+  };
+  cv.addEventListener('pointerup', release); cv.addEventListener('pointercancel', release);
+
+  function resize() {
+    const r = cv.getBoundingClientRect(), d = Math.min(2, Math.max(1.5, devicePixelRatio || 1));
+    cv.width = cv.height = Math.max(2, Math.round(r.width * d)); gl.viewport(0, 0, cv.width, cv.height);
+  }
+  new ResizeObserver(resize).observe(cv); resize();
+
+  /* ---------- 6. RENDER LOOP (60 FPS) ---------- */
+  const life = { amp: LIFE.awake.amp, f: LIFE.awake.f, br: LIFE.awake.br, bf: LIFE.awake.bf, ph: 0, bph: 0 };
+  let last = performance.now();
+  function frame(t) {
+    const dt = Math.min(.033, (t - last) / 1000 || .016); last = t;
+
+    // a) expression
+    const [e, ms, label] = decide(t); show(e, ms); setMood(label);
+    mix = Math.min(1, mix + dt * 1000 / fade); if (mix === 1) A = B;
+
+    // b) scripted idle tug uses the same spring-driven drag as pointer input
+    if (cueStartedAt) {
+      const elapsed = t - cueStartedAt;
+      const r = cv.getBoundingClientRect();
+      if (elapsed >= 1000 && elapsed < 1700) {
+        if (!drag.cue) {
+          const x = r.left + r.width * .55, y = r.top + r.height * .55;
+          drag.active = true; drag.moved = true; drag.cue = true;
+          drag.sx = drag.cx = x; drag.sy = drag.cy = y;
+          setGrabWeights(x, y);
+          portrait.classList.add('grabbing');
+        }
+        const progress = Math.min(1, Math.max(0, (elapsed - 1000) / 400));
+        const eased = progress * progress * (3 - 2 * progress);
+        drag.cx = drag.sx + 42 * eased;
+        drag.cy = drag.sy + 30 * eased;
+      } else if (elapsed >= 1700 && drag.cue) {
+        release(false);
+      }
+      if (elapsed >= CUE_DURATION) finishCue();
+    }
+
+    // c) drag target: rubber-banded stretch with a nervous tremble
+    if (drag.active && drag.moved) {
+      const k = VIEW.s / cv.getBoundingClientRect().width;
+      const dx = (drag.cx - drag.sx) * k, dy = (drag.cy - drag.sy) * k, L = Math.hypot(dx, dy) || 1;
+      const Le = DRAG.max * (1 - Math.exp(-L / DRAG.max)), tr = Le / DRAG.max * 2.5;
+      pull.x = dx / L * Le + Math.sin(t * .06) * tr; pull.y = dy / L * Le + Math.sin(t * .047 + 1) * tr;
+    } else pull.x = pull.y = 0;
+    physics(dt);
+
+    // c) idle sway + breathing (calmer asleep, wobblier when dizzy)
+    const P = e === 'dizzy' ? LIFE.dizzy : label === 'Napping' ? LIFE.sleep : LIFE.awake, l = Math.min(1, dt * 4);
+    for (const p of ['amp', 'f', 'br', 'bf']) life[p] += (P[p] - life[p]) * l;
+    life.ph += dt * 6.283 * life.f; life.bph += dt * 6.283 * life.bf;
+    const th = life.amp * Math.sin(life.ph) * motion, br = life.br * Math.sin(life.bph) * motion;
+
+    // d) final vertex positions = rest + spring displacement + idle motion
+    for (let n = 0; n < N; n++) {
+      const x = rest[2*n], y = rest[2*n+1];
+      pos[2*n]   = x + u[2*n]   * pin[n] - (y - PIVOT.y) * th * headM[n];
+      pos[2*n+1] = y + u[2*n+1] * pin[n] + (x - PIVOT.x) * th * headM[n] + br * bodyM[n];
+    }
+    gl.bindBuffer(gl.ARRAY_BUFFER, posBuf); gl.bufferSubData(gl.ARRAY_BUFFER, 0, pos);
+
+    // e) draw
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex[A] || tex.normal);
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, tex[B] || tex.normal);
+    gl.uniform1f(U('m'), mix * mix * (3 - 2 * mix));
+    gl.clearColor(.74, .84, .93, 1); gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawElements(gl.TRIANGLES, idx.length, gl.UNSIGNED_SHORT, 0);
+    requestAnimationFrame(frame);
+  }
+  portrait.classList.add('ready');
+  requestAnimationFrame(frame);
+};
+</script>
+
+<!-- Expression photos are served from public/faceimg. -->
+<script>
+startPortrait({
+  "normal": "/faceimg/Normal.jpg",
+  "left": "/faceimg/Lookingto%20the%20left.jpg",
+  "right": "/faceimg/Looking%20to%20right.jpg",
+  "leftDown": "/faceimg/Looking%20to%20left%20bottom.jpg",
+  "rightDown": "/faceimg/Looking%20to%20right%20bottom.jpg",
+  "closed": "/faceimg/Eye%20closed.jpg",
+  "wow": "/faceimg/Wow.jpg",
+  "happy": "/faceimg/Happy.jpg",
+  "dizzy": "/faceimg/Dizziness.jpg",
+  "stressed": "/faceimg/Stressed.jpg"
+});
+</script>
+</body>
+</html>

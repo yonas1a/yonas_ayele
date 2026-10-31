@@ -22,11 +22,13 @@ import {
   SiReact,
   SiSqlite,
   SiTailwindcss,
+  SiTelegram,
   SiTypescript,
   SiVercel,
+  SiBehance,
+  SiGithub,
+  SiLinkedin,
 } from "react-icons/si";
-import cpuImage from "../assets/cpu.png";
-import cpuShadowImage from "../assets/cpu_shadow.png";
 import devProjects from "../components/devProjects";
 import projects from "../components/projects";
 import projects_part from "../components/projects_part";
@@ -177,10 +179,83 @@ const Home = () => {
 
   /* Refs for scroll navigation */
   const heroRef = useRef(null);
+  const portraitFrameRef = useRef(null);
   const skillsRef = useRef(null);
   const experienceRef = useRef(null);
   const worksRef = useRef(null);
   const contactRef = useRef(null);
+
+  useEffect(() => {
+    const frame = portraitFrameRef.current;
+    if (!frame) return undefined;
+
+    const idleDelay = 3000;
+    const cueDuration = 2600;
+    let idleTimer;
+    let repeatTimer;
+    let cueRunning = false;
+    let disabled = false;
+
+    const sendCueMessage = (type) => {
+      frame.contentWindow?.postMessage({ type }, window.location.origin);
+    };
+
+    const scheduleCue = () => {
+      window.clearTimeout(idleTimer);
+      window.clearTimeout(repeatTimer);
+      if (cueRunning) {
+        sendCueMessage("portrait-cue-cancel");
+        cueRunning = false;
+      }
+      if (disabled) return;
+
+      idleTimer = window.setTimeout(() => {
+        if (disabled) return;
+        cueRunning = true;
+        sendCueMessage("portrait-cue-start");
+        repeatTimer = window.setTimeout(() => {
+          cueRunning = false;
+          scheduleCue();
+        }, cueDuration);
+      }, idleDelay);
+    };
+
+    const handleActivity = () => scheduleCue();
+    const handleMessage = (event) => {
+      if (event.source !== frame.contentWindow) return;
+      if (event.data?.type === "portrait-cue-activity") {
+        scheduleCue();
+      } else if (event.data?.type === "portrait-user-interaction") {
+        disabled = true;
+        window.clearTimeout(idleTimer);
+        window.clearTimeout(repeatTimer);
+        cueRunning = false;
+        sendCueMessage("portrait-cue-cancel");
+      }
+    };
+
+    frame.addEventListener("load", scheduleCue);
+    window.addEventListener("pointermove", handleActivity, { passive: true });
+    window.addEventListener("pointerdown", handleActivity, { passive: true });
+    window.addEventListener("click", handleActivity, { passive: true });
+    window.addEventListener("touchstart", handleActivity, { passive: true });
+    window.addEventListener("scroll", handleActivity, { passive: true, capture: true });
+    window.addEventListener("message", handleMessage);
+
+    if (frame.contentDocument?.readyState === "complete") scheduleCue();
+
+    return () => {
+      window.clearTimeout(idleTimer);
+      window.clearTimeout(repeatTimer);
+      frame.removeEventListener("load", scheduleCue);
+      window.removeEventListener("pointermove", handleActivity);
+      window.removeEventListener("pointerdown", handleActivity);
+      window.removeEventListener("click", handleActivity);
+      window.removeEventListener("touchstart", handleActivity);
+      window.removeEventListener("scroll", handleActivity, true);
+      window.removeEventListener("message", handleMessage);
+    };
+  }, []);
 
   const scrollTo = (ref) => {
     ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -349,20 +424,16 @@ const Home = () => {
           <section className="second_div" ref={heroRef}>
             <div id="main_view">
               <div id="mv">
-                <div id="cpu">
-                  <img
-                    className="image_of_cpu"
-                    src={cpuImage}
-                    id="cpu_img"
-                    alt="Illustrated laptop"
-                  />
-                  <img
-                    className="image_of_shdow"
-                    src={cpuShadowImage}
-                    id="cpu_shdow"
-                    alt=""
+                <div className="hero-portrait-wrap">
+                  <iframe
+                    className="hero-portrait-frame"
+                    ref={portraitFrameRef}
+                    src="/interactive-portrait.html?embedded"
+                    title="Interactive portrait of Yonas Ayele"
+                    loading="eager"
                   />
                 </div>
+                <p className="portrait-hint">Move your cursor, click, <br />or gently drag the portrait.</p>
               </div>
               <div id="mv">
                 <h1 id="my_name">Yonas Ayele</h1>
@@ -377,6 +448,20 @@ const Home = () => {
                   {content.heroTagline}
                 </motion.p>
                 <p id="par">{content.heroBio}</p>
+                <div className="hero-social-links" aria-label="Social profiles">
+                  <a href="https://www.linkedin.com/in/yonas-ayele-030b03286" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                    <SiLinkedin aria-hidden="true" />
+                  </a>
+                  <a href="https://www.behance.net/yonas_ayele" target="_blank" rel="noopener noreferrer" aria-label="Behance">
+                    <SiBehance aria-hidden="true" />
+                  </a>
+                  <a href="https://github.com/yonas1a" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+                    <SiGithub aria-hidden="true" />
+                  </a>
+                  <a href="https://t.me/John_Ay1" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
+                    <SiTelegram aria-hidden="true" />
+                  </a>
+                </div>
                 <a className="download-cv" href="/cv.pdf" download="Yonas-Ayele-CV.pdf">
                   <LuDownload aria-hidden="true" />
                   <span>Download CV</span>

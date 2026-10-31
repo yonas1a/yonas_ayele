@@ -171,6 +171,55 @@ img#logo {
   width: 45%;
   z-index: 1;
 }
+.hero-portrait-wrap {
+  position: relative;
+  isolation: isolate;
+  width: min(100%, 445px);
+  aspect-ratio: 1;
+  margin: -43px auto 0;
+}
+.hero-portrait-wrap::before,
+.hero-portrait-wrap::after {
+  position: absolute;
+  z-index: 0;
+  inset: 8%;
+  border: 2px solid rgba(77, 166, 255, 0.7);
+  border-radius: 50%;
+  box-shadow: 0 0 14px rgba(0, 126, 255, 0.45), inset 0 0 14px rgba(0, 126, 255, 0.18);
+  content: "";
+  pointer-events: none;
+  animation: portrait-radar-pulse 3.2s ease-out infinite;
+}
+.hero-portrait-wrap::after {
+  animation-delay: -1.6s;
+}
+@keyframes portrait-radar-pulse {
+  0% {
+    opacity: 0.75;
+    transform: scale(0.98);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+.hero-portrait-frame {
+  display: block;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.portrait-hint {
+  position: relative;
+  z-index: 1;
+  margin: -10px auto 0;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: var(--font-primary, 'Inter', system-ui);
+  font-size: 17px;
+  text-align: center;
+}
 h1#my_name {
   font-family: var(--font-display, 'Outfit', system-ui);
   color: white;
@@ -206,6 +255,35 @@ h3#skill_text {
   font-family: var(--font-primary, 'Inter', sans-serif);
   line-height: 1.7;
   font-weight: 400;
+}
+.hero-social-links {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+.hero-social-links a {
+  display: inline-flex;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(0, 126, 255, 0.35);
+  border-radius: 50%;
+  background: rgba(0, 126, 255, 0.08);
+  color: rgba(255, 255, 255, 0.82);
+  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+.hero-social-links a:hover,
+.hero-social-links a:focus-visible {
+  transform: translateY(-3px);
+  border-color: #4da6ff;
+  background: rgba(0, 126, 255, 0.22);
+  color: #fff;
+}
+.hero-social-links svg {
+  width: 18px;
+  height: 18px;
 }
 .hero-design-line {
   color: #007eff;
@@ -314,6 +392,12 @@ h3#skill_text {
 @media (prefers-reduced-motion: reduce) {
   .tech-marquee-track {
     animation: none !important;
+  }
+  .hero-portrait-wrap::before,
+  .hero-portrait-wrap::after {
+    animation: none;
+    opacity: 0.2;
+    transform: scale(1.08);
   }
 }
 
@@ -1439,6 +1523,9 @@ div#percentage_bar {
   #mv {
     width: 100%;
     margin-top: 30px;
+  }
+  .hero-portrait-wrap {
+    width: min(100%, 390px);
   }
   /* CPU illustration — smaller & centred on mobile */
   div#cpu {
